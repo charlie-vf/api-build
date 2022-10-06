@@ -6,6 +6,67 @@ const resultsModal = new bootstrap.Modal(document.getElementById("resultsModal")
 // We won’t actually use it  in these lessons, but it’s 
 // good practice to pass the event  object into our handler function.
 document.getElementById("status").addEventListener("click", e => getStatus(e));
+document.getElementById("submit").addEventListener("click", e => postForm(e));
+
+async function postForm(e) {
+
+    // FormData:
+    // can capture all of the fields in a HTML form and return it as an object.
+    // we can then give this object to "fetch", and we don't need to do any other processing.
+    const form = new FormData(document.getElementById("checksform"));
+    
+    // if you want to confirm  that the form has captured correctly,
+    // then the formData object has several default methods that allow us to manipulate the data. 
+    // One of these, is the entries method. Which we can iterate through to see the form entries. 
+    // for (let e of form.entries()) {
+    //   console.log(e);
+    // }
+
+    const response = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+            "Authorization": API_KEY,
+        },
+        body: form,
+    });
+    // ^^ this will make a POST request to the API, authorize it with the API key,  
+    // and attach the form as the body of the request.
+
+    const data = await response.json();
+
+    if (response.ok) {
+        displayErrors(data);
+    } else {
+        throw new Error(data.error);
+    }
+}
+
+function displayErrors(data) {
+    let heading = `JSHint results for ${data.file}`;
+
+    // the key names below are taken from the console in dev tools
+    // total_errors
+    // error_list
+    // error.col
+    // etc....
+    if (data.total_errors === 0) {
+        results = `<div class="no-errors">No errors reported!</div>`;
+    } else {
+        results = `<div>Total Errors: <span class="error_count">${data.total_errors}</span></div>`;
+        for (let error of data.error_list) {
+            // report  the line & column numbers where these errors are happening.
+            // line and column are within the same div, here, just separate lines
+            results += `<div>At line <span class="line">${error.line}</span>, `;
+            results += `column <span class="column">${error.col}:</span></div>`;
+            // pass in the error text that comes back from json
+            results += `<div class="error">${error.error}</div>`;
+        }
+    }
+    document.getElementById("resultsModalTitle").innerText = heading;
+    document.getElementById("results-content").innerHTML = results;
+    resultsModal.show();
+}
+
 
 async function getStatus(e) {
     // The query string will consist of the URL and 
