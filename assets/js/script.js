@@ -8,12 +8,34 @@ const resultsModal = new bootstrap.Modal(document.getElementById("resultsModal")
 document.getElementById("status").addEventListener("click", e => getStatus(e));
 document.getElementById("submit").addEventListener("click", e => postForm(e));
 
+function processOptions(form) {
+    // create temporary empty array
+    let optArray = [];
+
+    // then iterate through the entries and push them into the array
+    for (let e of form.entries()) {
+        // if equal to options then we're going to push the second
+        // value in each entry into the temporary array
+        if (e[0] === "options") {
+            optArray.push(e[1]);
+        }
+    }
+    // will delete all occurences of options in our form data
+    form.delete("options");
+    // append new options and use .join to convert into a string (the API requires a string)
+    // this will append back a comma separated string of options
+    form.append("options", optArray.join());
+
+    return form;
+}
+
+
 async function postForm(e) {
 
     // FormData:
     // can capture all of the fields in a HTML form and return it as an object.
     // we can then give this object to "fetch", and we don't need to do any other processing.
-    const form = new FormData(document.getElementById("checksform"));
+    const form = processOptions(new FormData(document.getElementById("checksform")));
     
     // if you want to confirm  that the form has captured correctly,
     // then the formData object has several default methods that allow us to manipulate the data. 
@@ -37,6 +59,7 @@ async function postForm(e) {
     if (response.ok) {
         displayErrors(data);
     } else {
+        displayException(data);
         throw new Error(data.error);
     }
 }
@@ -89,6 +112,7 @@ async function getStatus(e) {
     if (response.ok) {
         displayStatus(data);
     } else {
+        displayException(data);
         throw new Error(data.error);
     }   // we're using the built-in JavaScript error handler to throw a new error but you can 
         //see here where it says  
@@ -96,11 +120,28 @@ async function getStatus(e) {
 }
 // needs to set the heading text to API key status, it needs to set the body 
 // text to "your key is valid until" and the date, and it needs to show the modal. 
+
+
 function displayStatus(data) {
     let heading = "API Key Status";
     let results = "<div>Your key is valid until</div>";
     results += `<div class="key-status">${data.expiry}</div>`;
     
+    document.getElementById("resultsModalTitle").innerText = heading;
+    document.getElementById("results-content").innerHTML = results;
+    resultsModal.show();
+}
+
+// displayException(data) added before the throw new data in the postForm and getStatus
+// if statements
+function displayException(data) {
+
+    let heading = `An Exception Occurred`;
+
+    results = `<div>The API returned status code ${data.status_code}</div>`;
+    results += `<div>Error number: <strong>${data.error_no}</strong></div>`;
+    results += `<div>Error text: <strong>${data.error}</strong></div>`;
+
     document.getElementById("resultsModalTitle").innerText = heading;
     document.getElementById("results-content").innerHTML = results;
     resultsModal.show();
