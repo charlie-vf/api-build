@@ -26,6 +26,21 @@ async function getStatus(e) {
     // If it returns an error code, then the “ok” property will be set to false.
     // check to see if response.ok property is set to true
     if (response.ok) {
-        console.log(data.expiry);
-    }
+        displayStatus(data);
+    } else {
+        throw new Error(data.error);
+    }   // we're using the built-in JavaScript error handler to throw a new error but you can 
+        //see here where it says  
+        // 'data.error' that that's the descriptive message from the json that's been returned.
+}
+// needs to set the heading text to API key status, it needs to set the body 
+// text to "your key is valid until" and the date, and it needs to show the modal. 
+function displayStatus(data) {
+    let heading = "API Key Status";
+    let results = "<div>Your key is valid until</div>";
+    results += `<div class="key-status">${data.expiry}</div>`;
+    
+    document.getElementById("resultsModalTitle").innerText = heading;
+    document.getElementById("results-content").innerHTML = results;
+    resultsModal.show();
 }
